@@ -1,12 +1,4 @@
 #!/usr/bin/env bash
-### ==============================================================================
-### SO HOW DO YOU PROCEED WITH YOUR SCRIPT?
-### 1. define the options/parameters and defaults you need in list_options()
-### 2. define dependencies on other programs/scripts in list_dependencies()
-### 3. implement the different actions in main() with helper functions
-### 4. implement helper functions you defined in previous step
-### ==============================================================================
-
 ### Created by Peter Forret ( pforret ) on 2021-02-15
 ### Based on https://github.com/pforret/bashew 1.14.0
 script_version="0.0.1" # if there is a VERSION.md in this script's folder, it will take priority for version number
@@ -15,25 +7,6 @@ readonly script_created="2021-02-15"
 readonly run_as_root=-1 # run_as_root: 0 = don't check anything / 1 = script MUST run as root / -1 = script MAY NOT run as root
 
 list_options() {
-  ### Change the next lines to reflect which flags/options/parameters you need
-  ### flag:   switch a flag 'on' / no value specified
-  ###     flag|<short>|<long>|<description>
-  ###     e.g. "-v" or "--verbose" for verbose output / default is always 'off'
-  ###     will be available as $<long> in the script e.g. $verbose
-  ### option: set an option / 1 value specified
-  ###     option|<short>|<long>|<description>|<default>
-  ###     e.g. "-e <extension>" or "--extension <extension>" for a file extension
-  ###     will be available a $<long> in the script e.g. $extension
-  ### list: add an list/array item / 1 value specified
-  ###     list|<short>|<long>|<description>| (default is ignored)
-  ###     e.g. "-u <user1> -u <user2>" or "--user <user1> --user <user2>"
-  ###     will be available a $<long> array in the script e.g. ${user[@]}
-  ### param:  comes after the options
-  ###     param|<type>|<long>|<description>
-  ###     <type> = 1 for single parameters - e.g. param|1|output expects 1 parameter <output>
-  ###     <type> = ? for optional parameters - e.g. param|1|output expects 1 parameter <output>
-  ###     <type> = n for list parameter    - e.g. param|n|inputs expects <input1> <input2> ... <input99>
-  ###     will be available as $<long> in the script after option/param parsing
   echo -n "
 #commented lines will be filtered
 flag|h|help|show usage
@@ -44,9 +17,8 @@ option|l|log_dir|folder for log files |$HOME/log/$script_prefix
 option|t|tmp_dir|folder for temp files|.tmp
 #option|w|width|width to use|800
 #list|u|user|user(s) to execute this for
-param|1|action|action to perform: analyze/convert
-param|?|input|input file
-param|?|output|output file
+param|1|action|action to perform: install/uninstall/search/list
+param|?|input|input font name 
 " | grep -v '^#' | grep -v '^\s*$'
 }
 
@@ -61,9 +33,7 @@ list_dependencies() {
   echo -n "
 gawk
 curl
-#ffmpeg
-#convert|imagemagick
-#progressbar|basher install pforret/progressbar
+wget
 " | grep -v "^#" | grep -v '^\s*$'
 }
 
@@ -77,18 +47,39 @@ main() {
 
   action=$(lower_case "$action")
   case $action in
-  action1)
-    #TIP: use «$script_prefix action1» to ...
-    #TIP:> $script_prefix action1 input.txt
+  install)
+    #TIP: use «$script_prefix install» to install a font
+    #TIP:> $script_prefix install Bitter-SemiBoldItalic
     # shellcheck disable=SC2154
-    do_action1 "$input"
+    do_install "$input"
     ;;
 
-  action2)
-    #TIP: use «$script_prefix action2» to ...
-    #TIP:> $script_prefix action2 input.txt output.pdf
+  uninstall)
+    #TIP: use «$script_prefix uninstall» to uninstall a font
+    #TIP:> $script_prefix uninstall Faustina-BoldItalic
     # shellcheck disable=SC2154
-    do_action2 "$input" "$output"
+    do_uninstall "$input"
+    ;;
+
+  search)
+    #TIP: use «$script_prefix search» to look for a downloadable font
+    #TIP:> $script_prefix search script
+    # shellcheck disable=SC2154
+    do_search "$input"
+    ;;
+
+  info)
+    #TIP: use «$script_prefix info» to get more info on a font
+    #TIP:> $script_prefix info OleoScriptSwashCaps-Regular
+    # shellcheck disable=SC2154
+    do_info "$input"
+    ;;
+
+  list)
+    #TIP: use «$script_prefix list» to show all locally installed fonts
+    #TIP:> $script_prefix list
+    # shellcheck disable=SC2154
+    do_list
     ;;
 
   check|env)
@@ -120,16 +111,63 @@ main() {
 ## Put your helper scripts here
 #####################################################################
 
-do_action1() {
-  log_to_file "action1 [$input]"
-  # < "$1"  do_action1_stuff
+do_install() {
+  log_to_file "install [$input]"
+  sources=("$script_install_folder/google_fonts.txt")
+  cat "${sources[@]}" \
+  | grep -i "$input" \
+  | head -1 \
+  | while IFS=";" read -r name preview download ; do
+      download_font "$download"
+    done
+
 }
 
-do_action2() {
-  log_to_file "action2 [$input] -> [$output]"
-  # < "$1"  do_action2_stuff > "$2"
+do_uninstall() {
+  log_to_file "uninstall [$input]"
+
 }
 
+do_search() {
+  log_to_file "search [$input] "
+  sources=("$script_install_folder/google_fonts.txt")
+  cat "${sources[@]}" \
+  | cut -d";" -f1 \
+  | grep -i "$input"
+}
+
+do_info() {
+  log_to_file "search [$input] "
+  sources=("$script_install_folder/google_fonts.txt")
+  cat "${sources[@]}" \
+  | grep -i "$input" \
+  | awk -F";" '{print "Font:    "$1; print "Preview: "$2; print " ";}'
+}
+
+do_list() {
+  log_to_file "list"
+
+}
+
+download_font(){
+  case "$os_name" in
+  "macOS")
+    (
+      cd /Library/Fonts || die "No folder /Library/Fonts on this machine"
+      if [[ ! -f $(basename "$1") ]] ; then
+        announce "Install $(basename "$1")"
+        wget "$1"
+      else
+        alert "Font $(basename "$1") is already installed"
+      fi
+    )
+    ;;
+
+  *)
+    die "Can't install fonts on this $os_kernel/$os_name machine"
+  esac
+
+}
 
 #####################################################################
 ################### DO NOT MODIFY BELOW THIS LINE ###################
