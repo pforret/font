@@ -22,8 +22,21 @@ or with `git`
 	$ cd font
 
 ## 🔥 Usage
-
-	> font.sh [action]
+```
+Program: font 0.0.2 by peter@forret.com
+Updated: Feb 15 23:47:05 2021
+Description: manage installed fonts for Linux and MacOS
+Usage: font [-h] [-q] [-v] [-f] [-l <log_dir>] [-t <tmp_dir>] <action> <input?>
+Flags, options and parameters:
+-h|--help        : [flag] show usage [default: off]
+-q|--quiet       : [flag] no output [default: off]
+-v|--verbose     : [flag] output more [default: off]
+-f|--force       : [flag] do not ask for confirmation (always yes) [default: off]
+-l|--log_dir <?> : [option] folder for log files   [default: /Users/pforret/log/font]
+-t|--tmp_dir <?> : [option] folder for temp files  [default: .tmp]
+<action>         : [parameter] action to perform: install/uninstall/search/list
+<input>          : [parameter] input font name  (optional)
+```
 
 ## 📝 Acknowledgements
 

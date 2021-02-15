@@ -14,9 +14,7 @@ flag|q|quiet|no output
 flag|v|verbose|output more
 flag|f|force|do not ask for confirmation (always yes)
 option|l|log_dir|folder for log files |$HOME/log/$script_prefix
-option|t|tmp_dir|folder for temp files|.tmp
-#option|w|width|width to use|800
-#list|u|user|user(s) to execute this for
+option|t|tmp_dir|folder for temp files|$HOME/.tmp
 param|1|action|action to perform: install/uninstall/search/list
 param|?|input|input font name 
 " | grep -v '^#' | grep -v '^\s*$'
