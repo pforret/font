@@ -36,7 +36,7 @@ Flags, options and parameters:
     -t|--tmp_dir <?> : [option] folder for temp files  [default: /Users/pforret/.tmp]
     <action>         : [parameter] action to perform: install/uninstall/search/list
     <input>          : [parameter] input font name  (optional)
-                                  @github.com:pforret/font.git                                             
+
 ### TIPS & EXAMPLES
 * use font install to install a font
   font install Bitter-SemiBoldItalic
