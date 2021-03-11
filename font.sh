@@ -748,8 +748,8 @@ lookup_script_data() {
   Linux | GNU*)
     if [[ $(command -v lsb_release) ]]; then
       # 'normal' Linux distributions
-      os_name=$(lsb_release -i)    # Ubuntu
-      os_version=$(lsb_release -r) # 20.04
+      os_name=$(lsb_release -i | awk -F: '{ gsub(/\s+/,""); print $2}')    # Ubuntu
+      os_version=$(lsb_release -r | awk -F: '{ gsub(/\s+/,""); print $2}') # 20.04
     else
       # Synology, QNAP,
       os_name="Linux"

@@ -1,6 +1,6 @@
-log
-.tmp
 *.tmp
 .env
 .idea
+.tmp
 /google_fonts/
+log

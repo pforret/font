@@ -72,7 +72,13 @@ main() {
 ## 4. split off chunks of code into functions
 #####################################################################
 perform_compile(){
-  SOURCE="$(cd "$script_folder/../google_fonts" && pwd)"
+  path_fonts="$script_folder/../google_fonts"
+  folder_fonts=$(basename "$path_fonts")
+  if [[ ! -d "$path_fonts" ]] ; then
+    out "Downloading all Google fonts (will take a while) ..."
+    cd "$script_folder/../" && git clone https://github.com/google/fonts.git "$folder_fonts" && cd ..
+  fi
+  SOURCE="$(cd "$path_fonts" && pwd)"
   [[ ! -d "$SOURCE" ]] && die "Please add google/fonts as a submodule at $SOURCE"
   log "SOURCE = $SOURCE"
   DESTIN="$(cd "$script_folder/.." && pwd)/google_fonts.txt"
