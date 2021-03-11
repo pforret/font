@@ -117,6 +117,8 @@ do_install() {
   | grep -i "$input" \
   | head -1 \
   | while IFS=";" read -r name preview download ; do
+      debug "Downloading $name"
+      debug "Previw:     $preview"
       download_font "$download"
     done
 
@@ -744,7 +746,7 @@ lookup_script_data() {
     install_package="brew install"
     ;;
   Linux | GNU*)
-    if [[ $(which lsb_release) ]]; then
+    if [[ $(command -v lsb_release) ]]; then
       # 'normal' Linux distributions
       os_name=$(lsb_release -i)    # Ubuntu
       os_version=$(lsb_release -r) # 20.04
