@@ -80,6 +80,7 @@ perform_compile(){
   ( cd "$SOURCE" && find . -type f -name "*.ttf" ) \
   | while read -r fontfile ; do
       # https://github.com/google/fonts/raw/master/ofl/abeezee/ABeeZee-Italic.ttf
+      # https://raw.githubusercontent.com/google/fonts/main/ofl/kaushanscript/KaushanScript-Regular.ttf
       name=$(basename "$fontfile" .ttf)
       # https://fonts.google.com/?query=Sansita+Swashed
       # https://fonts.google.com/specimen/Almendra+Display?query=Almendra+Display
@@ -88,7 +89,7 @@ perform_compile(){
         gsub(/([A-Z0-9])/,"+&");
         gsub(/^\+/,"");
         print "https://fonts.google.com/specimen/" $1; }')"
-      download="$(echo "$fontfile" | awk '{gsub(/^\./,"https://github.com/google/fonts/raw/master"); print}')"
+      download="$(echo "$fontfile" | awk '{gsub(/^\./,"https://raw.githubusercontent.com/google/fonts/main"); print}')"
       echo "$name;$preview;$download"
     done \
     | sort > "$DESTIN"

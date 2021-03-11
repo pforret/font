@@ -43,6 +43,7 @@ main() {
   require_binaries
   log_to_file "[$script_basename] $script_version started"
 
+
   action=$(lower_case "$action")
   case $action in
   install)
@@ -77,7 +78,7 @@ main() {
     #TIP: use «$script_prefix list» to show all locally installed fonts
     #TIP:> $script_prefix list
     # shellcheck disable=SC2154
-    do_list
+    do_list "$input"
     ;;
 
   check|env)
@@ -143,30 +144,58 @@ do_info() {
 }
 
 do_list() {
-  log_to_file "list"
+  log_to_file "list [$1]"
+  local filter=${1:-.tt}
+
+  for f in $(get_font_folders) ; do
+    find "$f" -type f -name "*.ttf"
+  done \
+  | grep -i "$filter" \
+  | sort -u \
+  | awk '{if(length($0) > 4) {print}}' \
+  | sort -u
 
 }
 
 download_font(){
-  case "$os_name" in
-  "macOS")
-    (
-      cd /Library/Fonts || die "No folder /Library/Fonts on this machine"
-      if [[ ! -f $(basename "$1") ]] ; then
-        announce "Install $(basename "$1")"
-        wget "$1"
-      else
-        alert "Font $(basename "$1") is already installed"
-      fi
-    )
-    ;;
-
-  *)
-    die "Can't install fonts on this $os_kernel/$os_name machine"
-  esac
+  font_folder=$(get_font_folders | head -1)
+  [[ -z "$font_folder" ]] && die "Can't install font on this $os_name machine"
+  (
+    cd "$font_folder" || die "No folder $font_folder on this machine"
+    if [[ ! -f $(basename "$1") ]] ; then
+      announce "Install $(basename "$1")"
+      wget -q "$1"
+    else
+      alert "Font $(basename "$1") is already installed"
+    fi
+  )
 
 }
 
+get_font_folders(){
+  # returns folder(s) where fonts are stored
+  # first line = where new fonts can be installed
+  case "$os_name" in
+  "Windows")
+    echo "/mnt/c/Windows/Fonts"
+    ;;
+
+  "macOS")
+    echo "/Library/Fonts"
+    [[ -d "/System/Library/Fonts" ]] && echo "/System/Library/Fonts"
+    [[ -d "/System/Library/Fonts/Supplemental" ]] && echo "/System/Library/Fonts/Supplemental"
+    ;;
+
+  "Ubuntu")
+    echo "$HOME/.fonts"
+    [[ -d "/usr/share/fonts" ]] && echo "/usr/share/fonts"
+    [[ -d "/usr/local/share/fonts" ]] && echo "/usr/local/share/fonts"
+    ;;
+
+  *)  die "OS [$os_name] is not yet supported"
+
+  esac
+}
 #####################################################################
 ################### DO NOT MODIFY BELOW THIS LINE ###################
 #####################################################################
