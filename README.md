@@ -35,7 +35,7 @@ Flags, options and parameters:
 * use font search to look for a downloadable font
   font search script
 * use font info to get more info on a font
-  font info OleoScriptSwashCaps-Regular
+  font info OleoScriptSwashCaps
 * use font list to show all locally installed fonts
   font list
 * use font check to check if this script is ready to execute and what values the options/flags are
