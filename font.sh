@@ -13,9 +13,10 @@ flag|h|help|show usage
 flag|q|quiet|no output
 flag|v|verbose|output more
 flag|f|force|do not ask for confirmation (always yes)
+flag|d|detail|search for individual fonts, not just families
 option|l|log_dir|folder for log files |$HOME/log/$script_prefix
 option|t|tmp_dir|folder for temp files|$HOME/.tmp
-param|1|action|action to perform: install/uninstall/search/list
+param|1|action|action to perform: install/uninstall/search/list/info
 param|?|input|input font name 
 " | grep -v '^#' | grep -v '^\s*$'
 }
@@ -43,7 +44,7 @@ main() {
   require_binaries
   log_to_file "[$script_basename] $script_version started"
 
-
+  sources=("$script_install_folder/google_fonts.txt")
   action=$(lower_case "$action")
   case $action in
   install)
@@ -112,16 +113,14 @@ main() {
 
 do_install() {
   log_to_file "install [$input]"
-  sources=("$script_install_folder/google_fonts.txt")
-  cat "${sources[@]}" \
+  font_list \
   | grep -i "$input" \
   | head -1 \
-  | while IFS=";" read -r name preview download ; do
+  | while IFS=$'\t' read -r name preview download ; do
       debug "Downloading $name"
-      debug "Previw:     $preview"
+      debug "Preview:    $preview"
       download_font "$download"
     done
-
 }
 
 do_uninstall() {
@@ -131,18 +130,38 @@ do_uninstall() {
 
 do_search() {
   log_to_file "search [$input] "
-  sources=("$script_install_folder/google_fonts.txt")
-  cat "${sources[@]}" \
-  | cut -d";" -f1 \
-  | grep -i "$input"
+  nb_fonts=$(font_list | wc -l)
+  nb_families=$(font_list | awk '{ gsub(/(\-.*$)/,""); print $1;}' | sort -u | wc -l)
+  success "total # fonts   : $nb_fonts"
+  success "total # families: $nb_families"
+  # shellcheck disable=SC2154
+  font_list \
+  | if ((detail)) ; then
+      awk -F"\t" '{print $1}'
+    else
+      awk -F"\t" '{gsub(/(\-.*$)/,""); print $1}'
+    fi \
+  | grep -v '\[' \
+  | grep -i "$input" \
+  | sort -u
 }
 
 do_info() {
   log_to_file "search [$input] "
-  sources=("$script_install_folder/google_fonts.txt")
-  cat "${sources[@]}" \
+  font_list \
+  | if ((detail)) ; then
+      awk 'BEGIN {IFS="\t";OFS="\t"}
+      {print $1,$2}'
+    else
+      awk 'BEGIN {IFS="\t";OFS="\t"}
+      {
+        gsub(/(\-.*$)/,"",$1);
+        print $1,$2;
+      }'
+    fi \
+  | sort -u \
   | grep -i "$input" \
-  | awk -F";" '{print "Font:    "$1; print "Preview: "$2; print " ";}'
+  | awk -F"\t" '{print "Font:    "$1; print "Preview: "$2; print " ";}'
 }
 
 do_list() {
@@ -153,10 +172,16 @@ do_list() {
     find "$f" -type f -name "*.ttf"
   done \
   | grep -i "$filter" \
-  | sort -u \
+  | if ((detail)) ; then
+      cat
+    else
+      awk '
+      function basename(file) { sub(".*/", "", file); return file ;}
+      { gsub(/\.ttf/,"");
+        print basename($0); }'
+    fi \
   | awk '{if(length($0) > 4) {print}}' \
   | sort -u
-
 }
 
 download_font(){
@@ -171,7 +196,6 @@ download_font(){
       alert "Font $(basename "$1") is already installed"
     fi
   )
-
 }
 
 get_font_folders(){
@@ -198,6 +222,15 @@ get_font_folders(){
 
   esac
 }
+
+font_list(){
+  sources=("$script_install_folder/google_fonts.txt")
+  for source in "${sources[@]}" ; do
+    debug "Source: $source"
+    awk 'NR > 1 {print}' "$source"
+  done
+}
+
 #####################################################################
 ################### DO NOT MODIFY BELOW THIS LINE ###################
 #####################################################################

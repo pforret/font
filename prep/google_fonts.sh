@@ -72,6 +72,7 @@ main() {
 ## 4. split off chunks of code into functions
 #####################################################################
 perform_compile(){
+  sep="\t"
   path_fonts="$script_folder/../google_fonts"
   folder_fonts=$(basename "$path_fonts")
   if [[ ! -d "$path_fonts" ]] ; then
@@ -86,28 +87,32 @@ perform_compile(){
   DESTIN="$(cd "$script_folder/.." && pwd)/google_fonts.txt"
   log "DESTIN = $DESTIN"
   font_nr=0
+  echo "name${sep}preview${sep}download" > "$DESTIN"
   ( cd "$SOURCE" && find . -type f -name "*.ttf" ) \
+  | grep -v '\[' \
   | grep -v -e 'notosans[a-z]' -e 'notoserif[a-z]' \
-  | while read -r fontfile ; do
-      # https://github.com/google/fonts/raw/master/ofl/abeezee/ABeeZee-Italic.ttf
-      # https://raw.githubusercontent.com/google/fonts/main/ofl/kaushanscript/KaushanScript-Regular.ttf
-      name=$(basename "$fontfile" .ttf)
-      font_nr=$((font_nr + 1))
-      # https://fonts.google.com/?query=Sansita+Swashed
-      # https://fonts.google.com/specimen/Almendra+Display?query=Almendra+Display
-      preview="$(echo "$name" | awk '{
-        gsub(/([1-9][0-9]*pt.*$)/, "");
-        gsub(/\[.*$/,"");
-        gsub(/-[A-Z][a-zA-Z]+$/,"");
-        gsub(/([A-Z0-9]+)/,"+&");
-        gsub(/^\+/,"");
-        gsub(/(\+Display$)/, "");
-        print "https://fonts.google.com/specimen/" $1; }')"
-      download="$(echo "$fontfile" | awk '{gsub(/^\./,"https://raw.githubusercontent.com/google/fonts/main"); print}')"
-      echo "$name;$preview;$download"
-      [[ $((font_nr % 24))  == 0 ]] && printf '%05d %s -> %s                   \n' "$font_nr" "$name" "$preview" >&2
-    done \
-    | sort > "$DESTIN"
+  | awk '
+      BEGIN {
+        OFS="\t";
+        print("name","preview","download") ;
+        }
+      function basename(file) { sub(".*/", "", file); return file ;}
+      {
+        printf(NR "\r") > "/dev/stderr" ;
+        file_name=basename($1);
+        gsub(/(\.ttf)/, "", file_name);
+        real_name=file_name;
+        gsub(/([1-9][0-9]*pt.*$)/, "", real_name);
+        gsub(/\[.*$/,"", real_name);
+        gsub(/-[A-Z][a-zA-Z]+$/,"", real_name);
+        gsub(/([A-Z0-9]+)/,"+&", real_name);
+        gsub(/^\+/,"", real_name);
+        gsub(/(\+Display$)/, "", real_name);
+        preview="https://fonts.google.com/specimen/" real_name;
+        download=$1;
+        gsub(/^\./,"https://raw.githubusercontent.com/google/fonts/main",download);
+        print file_name,preview,download;
+      }'  > "$DESTIN"
     font_count=$(wc -l "$DESTIN" | awk '{print $1}')
     out "$font_count fonts in $SECONDS secs: $((font_count / SECONDS)) fonts/sec"
 
