@@ -10,31 +10,21 @@
 
 manage installed fonts for Linux and MacOS
 
-## 🚀 Installation
-
-with [basher](https://github.com/basherpm/basher)
-
-	$ basher install pforret/font
-
-or with `git`
-
-	$ git clone https://github.com/pforret/font.git
-	$ cd font
-
 ## 🔥 Usage
-```
-Program: font 0.1.0 by peter@forret.com
-Updated: Mar 11 15:37:32 2021
+```bash
+Program: font 0.1.2 by peter@forret.com
+Updated: May  2 23:33:51 2021
 Description: manage installed fonts for Linux and MacOS
-Usage: font [-h] [-q] [-v] [-f] [-l <log_dir>] [-t <tmp_dir>] <action> <input?>
+Usage: font [-h] [-q] [-v] [-f] [-d] [-l <log_dir>] [-t <tmp_dir>] <action> <input?>
 Flags, options and parameters:
     -h|--help        : [flag] show usage [default: off]
     -q|--quiet       : [flag] no output [default: off]
     -v|--verbose     : [flag] output more [default: off]
     -f|--force       : [flag] do not ask for confirmation (always yes) [default: off]
+    -d|--detail      : [flag] search for individual fonts, not just families [default: off]
     -l|--log_dir <?> : [option] folder for log files   [default: /Users/pforret/log/font]
     -t|--tmp_dir <?> : [option] folder for temp files  [default: /Users/pforret/.tmp]
-    <action>         : [parameter] action to perform: install/uninstall/search/list
+    <action>         : [parameter] action to perform: install/uninstall/search/list/info
     <input>          : [parameter] input font name  (optional)
 
 ### TIPS & EXAMPLES
@@ -48,9 +38,24 @@ Flags, options and parameters:
   font info OleoScriptSwashCaps-Regular
 * use font list to show all locally installed fonts
   font list
+* use font check to check if this script is ready to execute and what values the options/flags are
+  font check
+* use font env to generate an example .env file
+  font env > .env
 * use font update to update to the latest version
-  font update
+  font check
 ```
+
+## 🚀 Installation
+
+with [basher](https://www.basher.it)
+
+	$ basher install pforret/font
+
+or with `git`
+
+	$ git clone https://github.com/pforret/font.git
+	$ cd font
 
 ## 📝 Acknowledgements
 
