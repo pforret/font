@@ -76,29 +76,41 @@ perform_compile(){
   folder_fonts=$(basename "$path_fonts")
   if [[ ! -d "$path_fonts" ]] ; then
     out "Downloading all Google fonts (will take a while) ..."
-    cd "$script_folder/../" && git clone https://github.com/google/fonts.git "$folder_fonts" && cd ..
+    pushd "$script_folder/../" || die "$script_folder cannot be reached"
+    git clone https://github.com/google/fonts.git "$folder_fonts"
+    popd
   fi
   SOURCE="$(cd "$path_fonts" && pwd)"
   [[ ! -d "$SOURCE" ]] && die "Please add google/fonts as a submodule at $SOURCE"
   log "SOURCE = $SOURCE"
   DESTIN="$(cd "$script_folder/.." && pwd)/google_fonts.txt"
   log "DESTIN = $DESTIN"
+  font_nr=0
   ( cd "$SOURCE" && find . -type f -name "*.ttf" ) \
+  | grep -v -e 'notosans[a-z]' -e 'notoserif[a-z]' \
   | while read -r fontfile ; do
       # https://github.com/google/fonts/raw/master/ofl/abeezee/ABeeZee-Italic.ttf
       # https://raw.githubusercontent.com/google/fonts/main/ofl/kaushanscript/KaushanScript-Regular.ttf
       name=$(basename "$fontfile" .ttf)
+      font_nr=$((font_nr + 1))
       # https://fonts.google.com/?query=Sansita+Swashed
       # https://fonts.google.com/specimen/Almendra+Display?query=Almendra+Display
       preview="$(echo "$name" | awk '{
+        gsub(/([1-9][0-9]*pt.*$)/, "");
+        gsub(/\[.*$/,"");
         gsub(/-[A-Z][a-zA-Z]+$/,"");
-        gsub(/([A-Z0-9])/,"+&");
+        gsub(/([A-Z0-9]+)/,"+&");
         gsub(/^\+/,"");
+        gsub(/(\+Display$)/, "");
         print "https://fonts.google.com/specimen/" $1; }')"
       download="$(echo "$fontfile" | awk '{gsub(/^\./,"https://raw.githubusercontent.com/google/fonts/main"); print}')"
       echo "$name;$preview;$download"
+      [[ $((font_nr % 24))  == 0 ]] && printf '%05d %s -> %s                   \n' "$font_nr" "$name" "$preview" >&2
     done \
     | sort > "$DESTIN"
+    font_count=$(wc -l "$DESTIN" | awk '{print $1}')
+    out "$font_count fonts in $SECONDS secs: $((font_count / SECONDS)) fonts/sec"
+
 }
 
 
